@@ -9,7 +9,7 @@ const reconnect = () => bot.connect('new-plug-who-dis');
 const MAX_SONG_LENGTH = 420 //In seconds
 
   //Variables
-var votes, userCount, voteRatio, waitlistPos, command;
+var woots, mehs, userCount, voteRatio, waitlistPos, command;
 var currentSong = bot.getMedia();
 var chatObj = {};
 
@@ -46,6 +46,8 @@ var chatCommand = () => {
     case 'skip':
       if (chatObj.userRole >= 2) skipSong();
       break;
+    case 'thomas':
+      bot.sendChat('THOMAS🚂IS🚂A🚂TANK🚂ENGINE🚂NOT🚂A🚂TRAIN🚂TRAINS🚂ARE🚂THE🚂WHOLE🚂THING🚂HE🚂IS🚂JUST🚂THE🚂TANK🚂ENGINE🚂PART🚂');
     case 'woot':
       if (chatObj.userRole >= 4) botWoot();
       break;
@@ -103,6 +105,7 @@ reconnect();
 bot.on('roomJoin', (room) => {
   console.log(`---Joined ${room}---`);
   bot.sendChat('Memebot9000 Activated!', 4);
+  updateVoteData();
 });
   //Auto-reconnect
 bot.on('close', reconnect);
@@ -154,11 +157,4 @@ bot.on('chat', (data) => {
   //Vote events
 bot.on('vote', (data) => {
 
-    //Skip song if 40% of audience votes meh
-  if (data.v < 0) {
-    votes += data.v;
-  }
-  if (votes <= voteRatio) {
-    skipByMeh();
-  }
 });
