@@ -6,12 +6,13 @@ var bot = new PlugAPI({
 });
 
 const reconnect = () => bot.connect('new-plug-who-dis');
-const MAX_SONG_LENGTH = 420 //In seconds
+const MAX_SONG_LENGTH = 420; //In seconds
+const BOT_ID = 30063770;
 
   //Variables
-var woots, mehs, userCount, voteRatio, waitlistPos, command;
-var currentSong = bot.getMedia();
+var userCount, waitlistPos, command, test, idByName;
 var chatObj = {};
+var userList = [];
 
 
 /***************************************************************/
@@ -32,6 +33,17 @@ var chatCommand = () => {
   command = command.split(" ");
 
   switch (command[0]) {
+    case 'a':
+    case 'add':
+      if (chatObj.userRole >= 2) {
+        if (!command[1]) bot.moderateAddDJ(chatObj.userId);
+        else {
+          idByName = getIdByName(command[1]);
+          if (idByName !== -1) bot.moderateAddDJ(idByName);
+          idByName = -1;
+        }
+      }
+      break;
     case 'eta':
       if (!command[1]) getWaitlistPos();
       else bot.sendChat('Getting ETA of other users not yet supported.', 5);
@@ -42,12 +54,24 @@ var chatCommand = () => {
     case 'meh':
       if (chatObj.userRole >= 4) botMeh();
       break;
+    case 'r':
+    case 'remove':
+      if (chatObj.userRole >= 2) {
+        if (!command[1]) bot.moderateRemoveDJ(chatObj.userId);
+        else {
+          idByName = getIdByName(command[1]);
+          if (idByName !== -1) bot.moderateRemoveDJ(idByName);
+          idByName = -1;
+        }
+      }
+      break;
     case 's':
     case 'skip':
       if (chatObj.userRole >= 2) skipSong();
       break;
     case 'thomas':
       bot.sendChat('THOMAS🚂IS🚂A🚂TANK🚂ENGINE🚂NOT🚂A🚂TRAIN🚂TRAINS🚂ARE🚂THE🚂WHOLE🚂THING🚂HE🚂IS🚂JUST🚂THE🚂TANK🚂ENGINE🚂PART🚂');
+      break;
     case 'woot':
       if (chatObj.userRole >= 4) botWoot();
       break;
@@ -56,8 +80,18 @@ var chatCommand = () => {
   }
 }
 
+var getIdByName = (name) => {
+  var userLower, inputLower;
+  userList = bot.getUsers();
+  inputLower = name.toLowerCase();
 
+  for (var i = 0; i < userList.length; i++) {
+    userLower = userList[i].username.toLowerCase();
 
+    if (userLower.match(inputLower) !== null) return userList[i].id;
+  }
+  return -1;
+}
 var getWaitlistPos = () => {
   waitlistPos = bot.getWaitListPosition(chatObj.userId);
 
@@ -83,10 +117,6 @@ var skipSong = () => {
   console.log(`---Song Skipped By Moderator---`);
   bot.sendChat('Song skipped by moderator!');
 }
-var updateVoteData = () => {
-  userCount = bot.getUsers().length;
-  voteRatio = Math.round(userCount * 0.4) * -1;
-}
 var skipByMeh = () => {
   bot.moderateForceSkip();
   bot.sendChat('Meh votes too high! Song skipped!');
@@ -101,27 +131,26 @@ var skipByLength = () => {
 /***************************************************************/
 
   //Bot joins server
-reconnect();
 bot.on('roomJoin', (room) => {
   console.log(`---Joined ${room}---`);
   bot.sendChat('Memebot9000 Activated!', 4);
-  updateVoteData();
+  userCount = bot.getUsers().length;
 });
   //Auto-reconnect
-bot.on('close', reconnect);
-bot.on('error', reconnect);
+bot.on('close', reconnect());
+bot.on('error', reconnect());
 
 
 
 
 
   //User joins/leaves events
-bot.on('userJoin', () => {
+bot.on('userJoin', (data) => {
   bot.sendChat(`Welcome to the room, ${data.username}!`, 7);
-  updateVoteData();
+  userCount = bot.getUsers().length;
 });
 bot.on('userLeave', () => {
-  updateVoteData();
+  userCount = bot.getUsers().length;
 });
 
 
@@ -130,7 +159,6 @@ bot.on('userLeave', () => {
 bot.on('advance', () => {
   if (bot.getTimeRemaining() >= MAX_SONG_LENGTH) skipByLength();
   else {
-    votes = 0;
     bot.woot();
   }
 });
